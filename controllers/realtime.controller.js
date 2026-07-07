@@ -100,3 +100,102 @@ exports.votesCount = async (req, res) => {
     return res.status(500).json({ success: false });
   }
 };
+
+exports.classementUpdated = async (req, res) => {
+  try {
+
+    const {
+      event,
+      data
+    } = req.body;
+
+
+    console.log("=================================");
+    console.log("REALTIME CLASSEMENT RECEIVED");
+    console.log("Event :", event);
+    console.log("=================================");
+
+
+    if (!data || !data.concours || !data.classement) {
+
+      return res.status(400).json({
+        success: false,
+        message: "Données de classement invalides."
+      });
+
+    }
+
+
+    if (!global.io) {
+
+      return res.status(500).json({
+        success: false,
+        message: "Socket.IO non initialisé"
+      });
+
+    }
+
+
+    const concoursId = data.concours.id;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DIFFUSION REALTIME
+    |--------------------------------------------------------------------------
+    |
+    | Tous les utilisateurs connectés à ce concours
+    | reçoivent immédiatement le nouveau classement
+    |
+    */
+
+    global.io
+      .to(`concours_${concoursId}`)
+      .emit(
+        "classement.updated",
+        data
+      );
+
+
+    console.log(
+      `Classement envoyé au concours ${concoursId}`
+    );
+
+    console.log(
+      `Nombre candidats : ${data.classement.length}`
+    );
+
+
+    return res.json({
+
+      success: true,
+
+      message: "Classement diffusé.",
+
+      concours_id: concoursId
+
+    });
+
+
+  } catch (error) {
+
+
+    console.error(
+      "classementUpdated error :",
+      error
+    );
+
+
+    return res.status(500).json({
+
+      success: false,
+
+      message: "Erreur serveur realtime classement",
+
+      error: error.message
+
+    });
+
+
+  }
+};
