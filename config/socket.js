@@ -16,9 +16,6 @@ module.exports = (server) => {
 
     io.on("connection", (socket) => {
 
-        socket.emit("join_shop", shopId);
-        socket.emit("join_admin");
-
         console.log("User connected :", socket.id);
 
         /*
